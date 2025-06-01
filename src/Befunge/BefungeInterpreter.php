@@ -35,7 +35,7 @@ final class BefungeInterpreter extends AbstractInterpreter
         $steps = 0;
 
         while ($steps < $stepLimit) {
-            $currentChar = $this->getCurrentChar();
+            $currentChar = $this->grid->getCurrentChar();
 
             // Check for program termination - the @ symbol ends execution
             if ($currentChar === "@") {
@@ -46,70 +46,12 @@ final class BefungeInterpreter extends AbstractInterpreter
             $this->executeInstruction($currentChar);
 
             // Move to next position (with wrapping around edges)
-            $this->movePointer();
+            $this->grid->movePointer();
 
             $steps++;
         }
 
         return $this->output;
-    }
-
-    /**
-     * Convert the input string into a 2D grid that we can navigate
-     * This transforms the linear text representation into our spatial program format
-     *
-     * Imagine taking a piece of paper with code written on it and creating a coordinate
-     * system where we can point to any character by its (x,y) position
-     */
-    private function setupGrid(string $code): void
-    {
-        // Split the code into individual lines - PHP's explode is perfect for this
-        $lines = explode("\n", $code);
-        $this->height = count($lines);
-        $this->width = 0;
-
-        // Find the maximum width to create a rectangular grid
-        // This ensures we can navigate consistently even if lines have different lengths
-        foreach ($lines as $line) {
-            $this->width = max($this->width, strlen($line));
-        }
-
-        // Create our 2D grid initialized with spaces (no-op characters)
-        // PHP's array handling makes this quite straightforward
-        $this->grid = [];
-        for ($i = 0; $i < $this->height; $i++) {
-            $this->grid[$i] = [];
-            for ($j = 0; $j < $this->width; $j++) {
-                $this->grid[$i][$j] = " "; // Default to space (no-op instruction)
-            }
-        }
-
-        // Copy the actual program code into our grid structure
-        for ($i = 0; $i < count($lines); $i++) {
-            $line = $lines[$i];
-            for ($j = 0; $j < strlen($line); $j++) {
-                $this->grid[$i][$j] = $line[$j];
-            }
-        }
-    }
-
-    /**
-     * Get the character at current position, handling boundary conditions gracefully
-     * This is our interface between the instruction pointer and the program grid
-     */
-    private function getCurrentChar(): string
-    {
-        // Boundary checking - return space for out-of-bounds positions
-        // This provides safe behavior even if our pointer logic has bugs
-        if (
-            $this->x < 0 ||
-            $this->x >= $this->width ||
-            $this->y < 0 ||
-            $this->y >= $this->height
-        ) {
-            return " ";
-        }
-        return $this->grid[$this->y][$this->x];
     }
 
     /**
@@ -260,7 +202,7 @@ final class BefungeInterpreter extends AbstractInterpreter
 
             // Special control flow instructions
             case "#": // Trampoline - skip the next cell
-                $this->movePointer(); // Move once extra to skip next instruction
+                $this->grid->movePointer(); // Move once extra to skip next instruction
                 break;
 
             // Self-modification instructions - these allow programs to change themselves
@@ -318,34 +260,5 @@ final class BefungeInterpreter extends AbstractInterpreter
             return 0;
         }
         return array_pop($this->stack);
-    }
-
-    /**
-     * Move the instruction pointer in the current direction with wrapping
-     * This implements the toroidal topology of Befunge programs
-     *
-     * Imagine the program grid as being printed on a torus (donut shape) where
-     * moving off one edge brings you to the opposite edge
-     */
-    private function movePointer(): void
-    {
-        $this->x += $this->dx;
-        $this->y += $this->dy;
-
-        // Implement wrapping behavior using modulo arithmetic
-        // PHP's modulo handles negative numbers differently than some languages,
-        // so we add the dimension and modulo again for negative wrapping
-        if ($this->x < 0) {
-            $this->x = $this->width - 1;
-        }
-        if ($this->x >= $this->width) {
-            $this->x = 0;
-        }
-        if ($this->y < 0) {
-            $this->y = $this->height - 1;
-        }
-        if ($this->y >= $this->height) {
-            $this->y = 0;
-        }
     }
 }

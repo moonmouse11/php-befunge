@@ -9,8 +9,8 @@ final class Grid
     private array $grid;
     private int $width;
     private int $height;
-    private int $dx;
-    private int $dy;
+    private int $x;
+    private int $y;
 
     private function __construct() {}
 
@@ -46,5 +46,47 @@ final class Grid
         }
 
         return $this;
+    }
+
+    /**
+     * @description Get the character at current position, handling boundary conditions gracefully
+     * This is our interface between the instruction pointer and the program grid
+     */
+    public function getCurrentChar(): string
+    {
+        if (
+            $this->x < 0 ||
+            $this->x >= $this->width ||
+            $this->y < 0 ||
+            $this->y >= $this->height
+        ) {
+            return " ";
+        }
+        return $this->grid[$this->y][$this->x];
+    }
+
+    /**
+     * @description Move the instruction pointer in the current direction with wrapping
+     *
+     * @param int $moveX The x-axis movement
+     * @param int $moveY The y-axis movement
+     */
+    public function movePointer(int $moveX, int $moveY): void
+    {
+        $this->x += $moveX;
+        $this->y += $$moveY;
+
+        if ($this->x < 0) {
+            $this->x = $this->width - 1;
+        }
+        if ($this->x >= $this->width) {
+            $this->x = 0;
+        }
+        if ($this->y < 0) {
+            $this->y = $this->height - 1;
+        }
+        if ($this->y >= $this->height) {
+            $this->y = 0;
+        }
     }
 }
