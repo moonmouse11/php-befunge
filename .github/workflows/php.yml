@@ -47,7 +47,11 @@ jobs:
 
     - name: Resolve dependencies (PHP < 8.3 cannot use the lock)
       if: ${{ matrix.php-version < '8.3' }}
-      run: composer update --prefer-dist --no-progress
+      run: |
+        # The lock targets platform PHP 8.3; re-resolve for this runtime
+        # so no package requiring a newer PHP slips in.
+        composer config platform.php ${{ matrix.php-version }}
+        composer update --prefer-dist --no-progress
 
     - name: Check coding standard (PSR-12)
       run: composer lint
