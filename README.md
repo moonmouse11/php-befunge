@@ -85,6 +85,23 @@ composer test     # PHPUnit test suite
 composer analyse  # PHPStan, level 8
 ```
 
+## Continuous integration
+
+Every push and pull request runs the PHPUnit suite and PHPStan on PHP
+8.1-8.4, plus a SonarQube analysis (with Clover coverage and a Quality Gate
+check) via `.github/workflows/sonar.yml`.
+
+The SonarQube workflow expects two repository secrets
+(`Settings -> Secrets and variables -> Actions`):
+
+| Secret | Value |
+|---|---|
+| `SONAR_TOKEN` | SonarCloud: a token from https://sonarcloud.io/account/security (organization must match `sonar.organization` in `sonar-project.properties`). Self-hosted: a user token with analysis rights. |
+| `SONAR_HOST_URL` | `https://sonarcloud.io` for SonarCloud, or your server URL. |
+
+A self-hosted SonarQube variant (service container instead of SonarCloud) is
+included as a commented block in the workflow.
+
 ## License
 
 MIT License. See [LICENSE](LICENSE) for details.
