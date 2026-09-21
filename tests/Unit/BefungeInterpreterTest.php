@@ -137,6 +137,7 @@ final class BefungeInterpreterTest extends TestCase
     public function it_rejects_a_non_positive_step_limit(): void
     {
         $this->expectException(\InvalidArgumentException::class);
+        // NOSONAR: the constructor call itself is the unit under test here.
         new BefungeInterpreter(maxSteps: 0);
     }
 

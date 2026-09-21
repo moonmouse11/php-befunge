@@ -19,10 +19,10 @@ jobs:
         php-version: [ "8.1", "8.2", "8.3", "8.4" ]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11bd5960a326750d5838078e36cf38b85af677262 # v4
 
     - name: Setup PHP
-      uses: shivammathur/setup-php@v2
+      uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
       with:
         php-version: ${{ matrix.php-version }}
         coverage: none
@@ -32,16 +32,21 @@ jobs:
 
     - name: Cache Composer packages
       id: composer-cache
-      uses: actions/cache@v4
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
       with:
         path: vendor
         key: ${{ runner.os }}-php-${{ matrix.php-version }}-${{ hashFiles('**/composer.lock') }}
         restore-keys: |
           ${{ runner.os }}-php-${{ matrix.php-version }}-
 
-    # composer update (not install): the lock pins PHPUnit 12, which
-    # requires PHP >= 8.3, so older matrix versions must re-resolve.
-    - name: Install dependencies
+    # The lock pins PHPUnit 12 (PHP >= 8.3); older matrix versions
+    # must re-resolve PHPUnit 10/11 instead.
+    - name: Install dependencies (locked)
+      if: ${{ matrix.php-version >= '8.3' }}
+      run: composer install --prefer-dist --no-progress
+
+    - name: Resolve dependencies (PHP < 8.3 cannot use the lock)
+      if: ${{ matrix.php-version < '8.3' }}
       run: composer update --prefer-dist --no-progress
 
     - name: Check coding standard (PSR-12)
