@@ -98,15 +98,15 @@ Every push and pull request runs two workflows:
   and a Quality Gate check (free for public repositories on
   [SonarCloud](https://sonarcloud.io)).
 
-The SonarQube workflow expects two repository secrets
+The SonarQube workflow expects a single repository secret
 (`Settings -> Secrets and variables -> Actions`):
 
 | Secret | Value |
 |---|---|
 | `SONAR_TOKEN` | A token from https://sonarcloud.io/account/security (the organization must match `sonar.organization` in `sonar-project.properties`). |
-| `SONAR_HOST_URL` | `https://sonarcloud.io` for SonarCloud, or your own SonarQube server URL. |
 
-A self-hosted SonarQube variant (service container instead of SonarCloud) is
+The SonarCloud endpoint is hardcoded in the workflow (`SONAR_HOST_URL`); a
+self-hosted SonarQube variant (service container instead of SonarCloud) is
 included as a commented block in the workflow.
 
 ## License
