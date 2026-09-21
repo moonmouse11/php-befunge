@@ -1,0 +1,7 @@
+# Exclude development files from the distribution archive (git archive / Composer dist).
+/.github export-ignore
+/tests export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/phpunit.xml export-ignore
+/phpstan.neon export-ignore
