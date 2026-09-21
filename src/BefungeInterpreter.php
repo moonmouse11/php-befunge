@@ -84,23 +84,32 @@ final class BefungeInterpreter implements InterpreterInterface
             return;
         }
 
-        switch ($instruction) {
-            // Digits push their numeric value.
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-                $this->push((int) $instruction);
-                break;
+        if (ctype_digit($instruction)) {
+            $this->push((int) $instruction);
+            return;
+        }
 
-            // Arithmetic: pop two values, push the result.
-            // Note the order: the top of the stack is the right operand.
+        // The command groups are split into separate handlers to keep
+        // the dispatch and each group easy to follow.
+        match ($instruction) {
+            '+', '-', '*', '/', '%', '!', '`' => $this->executeArithmetic($instruction),
+            '>', '<', '^', 'v', '?', '_', '|' => $this->executeDirection($instruction),
+            ':', '\\', '$' => $this->executeStackOperation($instruction),
+            '.', ',' => $this->executeOutput($instruction),
+            '#', 'p', 'g' => $this->executeGridOperation($instruction),
+            '&', '~' => $this->executeInput($instruction),
+            '"' => $this->stringMode = !$this->stringMode,
+            default => null, // Spaces and unknown instructions are no-ops.
+        };
+    }
+
+    /**
+     * Arithmetic and logic: pop the operands, push the result.
+     * Note the order: the top of the stack is the right operand.
+     */
+    private function executeArithmetic(string $instruction): void
+    {
+        switch ($instruction) {
             case '+':
                 $a = $this->pop();
                 $b = $this->pop();
@@ -129,8 +138,6 @@ final class BefungeInterpreter implements InterpreterInterface
                 // the C-style truncation semantics of Befunge-93.
                 $this->push($a === 0 ? 0 : $b % $a);
                 break;
-
-            // Logic.
             case '!':
                 $this->push($this->pop() === 0 ? 1 : 0);
                 break;
@@ -139,8 +146,14 @@ final class BefungeInterpreter implements InterpreterInterface
                 $b = $this->pop();
                 $this->push($b > $a ? 1 : 0);
                 break;
+            default:
+                break; // Unreachable: the dispatch only forwards known instructions.
+        }
+    }
 
-            // Direction changes.
+    private function executeDirection(string $instruction): void
+    {
+        switch ($instruction) {
             case '>':
                 $this->dx = 1;
                 $this->dy = 0;
@@ -161,8 +174,6 @@ final class BefungeInterpreter implements InterpreterInterface
                 $directions = [[1, 0], [-1, 0], [0, -1], [0, 1]];
                 [$this->dx, $this->dy] = $directions[array_rand($directions)];
                 break;
-
-            // Conditional direction changes.
             case '_':
                 $this->dy = 0;
                 $this->dx = $this->pop() === 0 ? 1 : -1;
@@ -171,13 +182,14 @@ final class BefungeInterpreter implements InterpreterInterface
                 $this->dx = 0;
                 $this->dy = $this->pop() === 0 ? 1 : -1;
                 break;
+            default:
+                break; // Unreachable: the dispatch only forwards known instructions.
+        }
+    }
 
-            // String mode toggle.
-            case '"':
-                $this->stringMode = !$this->stringMode;
-                break;
-
-            // Stack manipulation.
+    private function executeStackOperation(string $instruction): void
+    {
+        switch ($instruction) {
             case ':':
                 // Duplicating an empty stack pushes 0.
                 $this->push($this->stack === [] ? 0 : $this->stack[count($this->stack) - 1]);
@@ -191,56 +203,54 @@ final class BefungeInterpreter implements InterpreterInterface
             case '$':
                 $this->pop();
                 break;
-
-            // Output.
-            case '.':
-                // Integer output is followed by a space, per the spec.
-                $this->output .= $this->pop() . ' ';
-                break;
-            case ',':
-                $this->output .= chr($this->pop() & 0xFF);
-                break;
-
-            // Control flow.
-            case '#':
-                // Trampoline: execute an extra move to skip the next cell.
-                $this->movePointer();
-                break;
-
-            // Self-modification.
-            case 'p':
-                $y = $this->pop();
-                $x = $this->pop();
-                $value = $this->pop();
-                $this->grid->putChar($x, $y, chr($value & 0xFF));
-                break;
-            case 'g':
-                $y = $this->pop();
-                $x = $this->pop();
-                $this->push(ord($this->grid->getChar($x, $y)));
-                break;
-
-            // Input.
-            case '&':
-                if ($this->input === null) {
-                    throw new InputRequiredException(
-                        'Program requested an integer (&), but no input source was provided.',
-                    );
-                }
-                $this->push($this->input->readInt());
-                break;
-            case '~':
-                if ($this->input === null) {
-                    throw new InputRequiredException(
-                        'Program requested a character (~), but no input source was provided.',
-                    );
-                }
-                $this->push(ord($this->input->readChar()));
-                break;
-
-            // Spaces and unknown instructions are no-ops.
             default:
-                break;
+                break; // Unreachable: the dispatch only forwards known instructions.
+        }
+    }
+
+    private function executeOutput(string $instruction): void
+    {
+        if ($instruction === '.') {
+            // Integer output is followed by a space, per the spec.
+            $this->output .= $this->pop() . ' ';
+        } else {
+            $this->output .= chr($this->pop() & 0xFF);
+        }
+    }
+
+    private function executeGridOperation(string $instruction): void
+    {
+        if ($instruction === '#') {
+            // Trampoline: execute an extra move to skip the next cell.
+            $this->movePointer();
+            return;
+        }
+
+        $y = $this->pop();
+        $x = $this->pop();
+
+        if ($instruction === 'p') {
+            // Self-modification: write a character into the program grid.
+            $this->grid->putChar($x, $y, chr($this->pop() & 0xFF));
+        } else {
+            // Read a character from the program grid.
+            $this->push(ord($this->grid->getChar($x, $y)));
+        }
+    }
+
+    private function executeInput(string $instruction): void
+    {
+        if ($this->input === null) {
+            throw new InputRequiredException(sprintf(
+                'Program requested %s, but no input source was provided.',
+                $instruction === '&' ? 'an integer (&)' : 'a character (~)',
+            ));
+        }
+
+        if ($instruction === '&') {
+            $this->push($this->input->readInt());
+        } else {
+            $this->push(ord($this->input->readChar()));
         }
     }
 

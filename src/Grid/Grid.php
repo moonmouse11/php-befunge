@@ -21,6 +21,7 @@ final class Grid
 
     private function __construct()
     {
+        // Instances are created exclusively through the fromString() factory.
     }
 
     public static function fromString(string $code): self
