@@ -1,0 +1,75 @@
+name: SonarQube
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  sonar:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        # Full history enables blame information and new-code detection.
+        fetch-depth: 0
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: "8.3"
+        coverage: pcov
+
+    - name: Install dependencies
+      run: composer update --prefer-dist --no-progress
+
+    - name: Run tests with coverage
+      run: vendor/bin/phpunit --coverage-clover=clover.xml
+
+    - name: Normalize coverage paths
+      # The Clover report contains absolute paths, which the Sonar scanner
+      # cannot match against indexed files.
+      run: sed -i "s|$GITHUB_WORKSPACE/||g" clover.xml
+
+    - name: Run SonarQube analysis
+      uses: SonarSource/sonarqube-scan-action@v5
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+    # Alternative: self-hosted SonarQube as a service container instead of
+    # SonarCloud. Replace the two env vars above and uncomment this block;
+    # a fresh server needs the project and a token created once per run.
+    #
+    #   services:
+    #     sonarqube:
+    #       image: sonarqube:10-community
+    #       env:
+    #         SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    #       ports: [ "9000:9000" ]
+    #
+    #   - name: Wait for SonarQube
+    #     run: |
+    #       for i in $(seq 1 60); do
+    #         status=$(curl -s http://localhost:9000/api/system/status \
+    #           | grep -o '"status":"UP"' || true)
+    #         [ -n "$status" ] && exit 0
+    #         sleep 5
+    #       done
+    #       exit 1
+    #
+    #   - name: Provision project and token
+    #     run: |
+    #       curl -s -u admin:admin -X POST \
+    #         "http://localhost:9000/api/projects/create?project=pots-php-befunge"
+    #       token=$(curl -s -u admin:admin -X POST \
+    #         "http://localhost:9000/api/user_tokens/generate?name=ci" \
+    #         | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+    #       echo "SONAR_TOKEN=$token" >> "$GITHUB_ENV"
+    #       echo "SONAR_HOST_URL=http://localhost:9000" >> "$GITHUB_ENV"

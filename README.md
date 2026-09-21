@@ -90,9 +90,24 @@ composer test     # PHPUnit test suite
 
 ## Continuous integration
 
-Every push and pull request runs the full check suite — PHPCS, PHPMD,
-PHPStan and PHPUnit — on PHP 8.1-8.4 via `.github/workflows/php.yml`.
-No external services or accounts are required.
+Every push and pull request runs two workflows:
+
+- `.github/workflows/php.yml` — PHPCS, PHPMD, PHPStan and PHPUnit on
+  PHP 8.1-8.4. No external services required.
+- `.github/workflows/sonar.yml` — SonarQube analysis with Clover coverage
+  and a Quality Gate check (free for public repositories on
+  [SonarCloud](https://sonarcloud.io)).
+
+The SonarQube workflow expects two repository secrets
+(`Settings -> Secrets and variables -> Actions`):
+
+| Secret | Value |
+|---|---|
+| `SONAR_TOKEN` | A token from https://sonarcloud.io/account/security (the organization must match `sonar.organization` in `sonar-project.properties`). |
+| `SONAR_HOST_URL` | `https://sonarcloud.io` for SonarCloud, or your own SonarQube server URL. |
+
+A self-hosted SonarQube variant (service container instead of SonarCloud) is
+included as a commented block in the workflow.
 
 ## License
 
