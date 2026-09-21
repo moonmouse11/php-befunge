@@ -9,7 +9,9 @@
     },
     "require-dev": {
         "phpstan/phpstan": "^2.2",
-        "phpunit/phpunit": "^10.5 || ^11.0 || ^12.0"
+        "phpunit/phpunit": "^10.5 || ^11.0 || ^12.0",
+        "squizlabs/php_codesniffer": "^4.0",
+        "phpmd/phpmd": "^2.15"
     },
     "autoload": {
         "psr-4": {
@@ -23,10 +25,21 @@
     },
     "scripts": {
         "analyse": "phpstan analyse",
-        "test": "phpunit"
+        "lint": "phpcs",
+        "phpmd": "phpmd src text phpmd.xml",
+        "test": "phpunit",
+        "check": [
+            "@lint",
+            "@phpmd",
+            "@analyse",
+            "@test"
+        ]
     },
     "scripts-descriptions": {
         "analyse": "Run PHPStan static analysis on src/.",
+        "check": "Run all quality checks: PHPCS, PHPMD, PHPStan and PHPUnit.",
+        "lint": "Check the coding standard (PSR-12) of src/ and tests/.",
+        "phpmd": "Run the PHP Mess Detector on src/.",
         "test": "Run the PHPUnit test suite."
     }
 }

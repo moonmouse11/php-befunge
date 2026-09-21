@@ -81,26 +81,18 @@ empty stack yields `0`, as required by the specification.
 
 ```bash
 composer install
-composer test     # PHPUnit test suite
+composer check    # everything below, in order
+composer lint     # coding standard (PSR-12), src/ + tests/
+composer phpmd    # mess detector: complexity, dead code, design
 composer analyse  # PHPStan, level 8
+composer test     # PHPUnit test suite
 ```
 
 ## Continuous integration
 
-Every push and pull request runs the PHPUnit suite and PHPStan on PHP
-8.1-8.4, plus a SonarQube analysis (with Clover coverage and a Quality Gate
-check) via `.github/workflows/sonar.yml`.
-
-The SonarQube workflow expects two repository secrets
-(`Settings -> Secrets and variables -> Actions`):
-
-| Secret | Value |
-|---|---|
-| `SONAR_TOKEN` | SonarCloud: a token from https://sonarcloud.io/account/security (organization must match `sonar.organization` in `sonar-project.properties`). Self-hosted: a user token with analysis rights. |
-| `SONAR_HOST_URL` | `https://sonarcloud.io` for SonarCloud, or your server URL. |
-
-A self-hosted SonarQube variant (service container instead of SonarCloud) is
-included as a commented block in the workflow.
+Every push and pull request runs the full check suite — PHPCS, PHPMD,
+PHPStan and PHPUnit — on PHP 8.1-8.4 via `.github/workflows/php.yml`.
+No external services or accounts are required.
 
 ## License
 

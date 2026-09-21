@@ -44,6 +44,12 @@ jobs:
     - name: Install dependencies
       run: composer update --prefer-dist --no-progress
 
+    - name: Check coding standard (PSR-12)
+      run: composer lint
+
+    - name: Run mess detector
+      run: composer phpmd
+
     - name: Run static analysis
       run: composer analyse
 

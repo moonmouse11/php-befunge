@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pots\PhpBefunge;
 
+use InvalidArgumentException;
 use Pots\PhpBefunge\Exception\ExecutionLimitExceededException;
 use Pots\PhpBefunge\Exception\InputRequiredException;
 use Pots\PhpBefunge\Grid\Grid;
@@ -41,7 +42,7 @@ final class BefungeInterpreter implements InterpreterInterface
         private readonly int $maxSteps = self::DEFAULT_MAX_STEPS,
     ) {
         if ($maxSteps < 1) {
-            throw new \InvalidArgumentException('The step limit must be a positive integer.');
+            throw new InvalidArgumentException('The step limit must be a positive integer.');
         }
     }
 
@@ -56,7 +57,7 @@ final class BefungeInterpreter implements InterpreterInterface
         $this->dx = 1;
         $this->dy = 0;
 
-        for ($step = 0; ; $step++) {
+        for ($step = 0;; $step++) {
             if ($step >= $this->maxSteps) {
                 throw new ExecutionLimitExceededException($this->maxSteps);
             }
@@ -213,9 +214,10 @@ final class BefungeInterpreter implements InterpreterInterface
         if ($instruction === '.') {
             // Integer output is followed by a space, per the spec.
             $this->output .= $this->pop() . ' ';
-        } else {
-            $this->output .= chr($this->pop() & 0xFF);
+            return;
         }
+
+        $this->output .= chr($this->pop() & 0xFF);
     }
 
     private function executeGridOperation(string $instruction): void
@@ -232,10 +234,11 @@ final class BefungeInterpreter implements InterpreterInterface
         if ($instruction === 'p') {
             // Self-modification: write a character into the program grid.
             $this->grid->putChar($x, $y, chr($this->pop() & 0xFF));
-        } else {
-            // Read a character from the program grid.
-            $this->push(ord($this->grid->getChar($x, $y)));
+            return;
         }
+
+        // Read a character from the program grid.
+        $this->push(ord($this->grid->getChar($x, $y)));
     }
 
     private function executeInput(string $instruction): void
@@ -249,9 +252,10 @@ final class BefungeInterpreter implements InterpreterInterface
 
         if ($instruction === '&') {
             $this->push($this->input->readInt());
-        } else {
-            $this->push(ord($this->input->readChar()));
+            return;
         }
+
+        $this->push(ord($this->input->readChar()));
     }
 
     private function movePointer(): void
