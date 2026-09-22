@@ -1,0 +1,26 @@
+name: Packagist
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ "*" ]
+
+permissions:
+  contents: read
+
+jobs:
+  update:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    # The anonymous GitHub -> Packagist webhook no longer works
+    # (packagist.org/api/github now requires authentication), so trigger
+    # the official update API instead.
+    - name: Trigger Packagist update
+      run: |
+        curl -sf -X POST \
+          -H 'Content-Type: application/json' \
+          -H 'Authorization: Bearer ${{ secrets.PACKAGIST_USER }}:${{ secrets.PACKAGIST_TOKEN }}' \
+          -d '{"repository":"https://github.com/moonmouse11/php-befunge"}' \
+          https://packagist.org/api/update-package

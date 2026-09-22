@@ -109,6 +109,14 @@ The SonarCloud endpoint is hardcoded in the workflow (`SONAR_HOST_URL`); a
 self-hosted SonarQube variant (service container instead of SonarCloud) is
 included as a commented block in the workflow.
 
+`.github/workflows/packagist.yml` notifies Packagist about new versions on
+every push. It needs two repository secrets: `PACKAGIST_USER` (your
+packagist.org login) and `PACKAGIST_TOKEN` (a token from your packagist.org
+profile; a "safe" token is sufficient — the update endpoint is read-only).
+Note the anonymous GitHub webhook to Packagist no longer works: packagist.org
+requires authentication, so the legacy webhook should be deleted in
+`Settings -> Webhooks`.
+
 ## License
 
 MIT License. See [LICENSE](LICENSE) for details.
