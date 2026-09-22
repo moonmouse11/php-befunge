@@ -93,7 +93,7 @@ composer test     # PHPUnit test suite
 Every push and pull request runs two workflows:
 
 - `.github/workflows/php.yml` — PHPCS, PHPMD, PHPStan and PHPUnit on
-  PHP 8.1-8.4. No external services required.
+  PHP 8.1-8.5. No external services required.
 - `.github/workflows/sonar.yml` — SonarQube analysis with Clover coverage
   and a Quality Gate check (free for public repositories on
   [SonarCloud](https://sonarcloud.io)).
