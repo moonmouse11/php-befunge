@@ -8,3 +8,12 @@ updates:
     schedule:
       interval: monthly
     open-pull-requests-limit: 5
+
+  # Dev tooling (the library itself has no runtime dependencies).
+  # Dependabot updates the committed lock file and proposes constraint
+  # widenings in composer.json when new majors appear.
+  - package-ecosystem: composer
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
