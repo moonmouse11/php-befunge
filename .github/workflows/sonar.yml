@@ -38,7 +38,7 @@ jobs:
       run: sed -i "s|$GITHUB_WORKSPACE/||g" clover.xml
 
     - name: Run SonarQube analysis
-      uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6
+      uses: SonarSource/sonarqube-scan-action@4d1dc0c91ee400dcf8a6dddf2f705ac36542e304 # v8.4.0
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         # Not a secret: the public SonarCloud endpoint. The self-hosted
